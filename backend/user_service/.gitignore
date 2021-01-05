@@ -1,8 +1,6 @@
 # Local development
 *.env
 .env
-*.dev
-.DS_Store
 
 # Docker
 Dockerfile

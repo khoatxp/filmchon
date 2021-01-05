@@ -69,17 +69,17 @@ func (server *Server) SignIn(email, password string) (map[string]interface{}, er
 
 	err = server.DB.Debug().Model(models.User{}).Where("email = ?", email).Take(&user).Error
 	if err != nil {
-		fmt.Println("this is the error getting the user: ", err)
+		fmt.Println("error getting the user: ", err)
 		return nil, err
 	}
 	err = utils.VerifyPassword(user.Password, password)
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		fmt.Println("this is the error hashing the password: ", err)
+		fmt.Println("error hashing the password: ", err)
 		return nil, err
 	}
 	token, err := auth.CreateToken(user.ID)
 	if err != nil {
-		fmt.Println("this is the error creating the token: ", err)
+		fmt.Println("error creating the token: ", err)
 		return nil, err
 	}
 	userData["token"] = token

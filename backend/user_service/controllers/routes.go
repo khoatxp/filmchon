@@ -6,22 +6,22 @@ import (
 
 func (s *Server) initializeRoutes() {
 
-	v1 := s.Router.Group("/api/v1")
+	router := s.Router.Group("/user_service")
 	{
 		// Login Route
-		v1.POST("/login", s.Login)
+		router.POST("/login", s.Login)
 
-		// Reset password:
-		v1.POST("/password/forgot", s.ForgotPassword)
-		v1.POST("/password/reset", s.ResetPassword)
+		// Reset password
+		router.POST("/password/forgot", s.ForgotPassword)
+		router.POST("/password/reset", s.ResetPassword)
 
 		//Users routes
-		v1.POST("/users", s.CreateUser)
-		// The user of the app have no business getting all the users.
-		// v1.GET("/users", s.GetUsers)
-		// v1.GET("/users/:id", s.GetUser)
-		v1.PUT("/users/:id", middlewares.TokenAuthMiddleware(), s.UpdateUser)
-		v1.PUT("/avatar/users/:id", middlewares.TokenAuthMiddleware(), s.UpdateAvatar)
-		v1.DELETE("/users/:id", middlewares.TokenAuthMiddleware(), s.DeleteUser)
+		router.POST("/users", s.CreateUser)
+		//FOR ADMIN
+		// router.GET("/users", s.GetUsers)
+		// router.GET("/users/:id", s.GetUser)
+		router.PUT("/users/:id", middlewares.TokenAuthMiddleware(), s.UpdateUser)
+		router.PUT("/avatar/users/:id", middlewares.TokenAuthMiddleware(), s.UpdateAvatar)
+		router.DELETE("/users/:id", middlewares.TokenAuthMiddleware(), s.DeleteUser)
 	}
 }

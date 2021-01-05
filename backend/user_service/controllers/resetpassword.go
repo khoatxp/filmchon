@@ -63,7 +63,7 @@ func (server *Server) ForgotPassword(c *gin.Context) {
 	resetPassword.Email = user.Email
 	resetPassword.Token = token
 
-	resetDetails, err := resetPassword.SaveDatails(server.DB)
+	resetDetails, err := resetPassword.SaveDetails(server.DB)
 	if err != nil {
 		errList = utils.FormatError(err.Error())
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -167,7 +167,7 @@ func (server *Server) ResetPassword(c *gin.Context) {
 			return
 		}
 		//Delete the token record so is not used again:
-		_, err = resetPassword.DeleteDatails(server.DB)
+		_, err = resetPassword.DeleteDetails(server.DB)
 		if err != nil {
 			errList["Cannot_delete"] = "Cannot Delete record, Pls try again later"
 			c.JSON(http.StatusNotFound, gin.H{

@@ -124,8 +124,6 @@ func (server *Server) GetUser(c *gin.Context) {
 }
 
 func (server *Server) UpdateAvatar(c *gin.Context) {
-
-	//clear previous error if any
 	errList = map[string]string{}
 
 	var err error
@@ -173,7 +171,7 @@ func (server *Server) UpdateAvatar(c *gin.Context) {
 		})
 		return
 	}
-	uploadedFile, fileErr := utils.FileUpload.UploadFile(file)
+	uploadedFile, fileErr := utils.FileUpload.UploadFile(file, userID)
 	if fileErr != nil {
 		c.JSON(http.StatusUnprocessableEntity, fileErr)
 		return
@@ -185,7 +183,7 @@ func (server *Server) UpdateAvatar(c *gin.Context) {
 	user.Prepare()
 	updatedUser, err := user.UpdateAUserAvatar(server.DB, uint32(uid))
 	if err != nil {
-		errList["Cannot_Save"] = "Cannot Save Image, Pls try again later"
+		errList["Cannot_Save"] = "Cannot Save Image, Please try again later"
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": http.StatusInternalServerError,
 			"error":  errList,

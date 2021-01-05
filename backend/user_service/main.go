@@ -1,4 +1,4 @@
-package user_service
+package main
 
 import (
 	"fmt"
@@ -18,14 +18,14 @@ func init() {
 	}
 }
 
-func Run() {
+func main() {
 
 	var err error
 	err = godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error getting env, %v", err)
 	} else {
-		fmt.Println("We are getting values")
+		fmt.Println("We are getting env values")
 	}
 
 	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
@@ -34,7 +34,7 @@ func Run() {
 	// seed.Load(server.DB)
 
 	apiPort := fmt.Sprintf(":%s", os.Getenv("API_PORT"))
-	fmt.Printf("Listening to port %s", apiPort)
+	fmt.Printf("Listening to port %s\n", apiPort)
 
 	server.Run(apiPort)
 

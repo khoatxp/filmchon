@@ -18,7 +18,7 @@ func (resetPassword *ResetPassword) Prepare() {
 	resetPassword.Email = html.EscapeString(strings.TrimSpace(resetPassword.Email))
 }
 
-func (resetPassword *ResetPassword) SaveDatails(db *gorm.DB) (*ResetPassword, error) {
+func (resetPassword *ResetPassword) SaveDetails(db *gorm.DB) (*ResetPassword, error) {
 	var err error
 	err = db.Debug().Create(&resetPassword).Error
 	if err != nil {
@@ -27,7 +27,7 @@ func (resetPassword *ResetPassword) SaveDatails(db *gorm.DB) (*ResetPassword, er
 	return resetPassword, nil
 }
 
-func (resetPassword *ResetPassword) DeleteDatails(db *gorm.DB) (int64, error) {
+func (resetPassword *ResetPassword) DeleteDetails(db *gorm.DB) (int64, error) {
 
 	db = db.Debug().Model(&ResetPassword{}).Where("id = ?", resetPassword.ID).Take(&ResetPassword{}).Delete(&ResetPassword{})
 

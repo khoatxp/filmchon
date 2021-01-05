@@ -7,21 +7,25 @@ import (
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path"
 	"strings"
 
-	"github.com/minio/minio-go/v6"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type fileUpload struct{}
 
 type UploadFileInterface interface {
-	UploadFile(file *multipart.FileHeader) (string, map[string]string)
+	UploadFile(file *multipart.FileHeader, userID string) (string, map[string]string)
 }
 
 //So what is exposed is Uploader
 var FileUpload UploadFileInterface = &fileUpload{}
 
-func (fu *fileUpload) UploadFile(file *multipart.FileHeader) (string, map[string]string) {
+func (fu *fileUpload) UploadFile(file *multipart.FileHeader, userID string) (string, map[string]string) {
 
 	errList := map[string]string{}
 
@@ -41,7 +45,7 @@ func (fu *fileUpload) UploadFile(file *multipart.FileHeader) (string, map[string
 
 	}
 	//only the first 512 bytes are used to sniff the content type of a file,
-	//so, so no need to read the entire bytes of a file.
+	//so no need to read the entire bytes of a file.
 	buffer := make([]byte, size)
 	f.Read(buffer)
 	fileType := http.DetectContentType(buffer)
@@ -50,28 +54,48 @@ func (fu *fileUpload) UploadFile(file *multipart.FileHeader) (string, map[string
 		errList["Not_Image"] = "Please Upload a valid image"
 		return "", errList
 	}
-	filePath := FormatFile(file.Filename)
 
-	accessKey := os.Getenv("DO_SPACES_KEY")
-	secKey := os.Getenv("DO_SPACES_SECRET")
-	endpoint := os.Getenv("DO_SPACES_ENDPOINT")
-	ssl := true
+	//Format file's path
+	filePath := userID + "/" + "avatar" + path.Ext(file.Filename)
 
-	// Initiate a client using DigitalOcean Spaces.
-	client, err := minio.New(endpoint, accessKey, secKey, ssl)
+	//Get env values
+	accessKey := os.Getenv("AWS_ACCESS_KEY_ID")
+	secKey := os.Getenv("AWS_SECRET_ACCESS_KEY")
+	region := os.Getenv("AWS_REGION")
+	bucketName := os.Getenv("AWS_BUCKET_NAME")
+
+	//new session for uploading files
+	sess, err := session.NewSession(
+		&aws.Config{
+			Region: aws.String(region),
+			Credentials: credentials.NewStaticCredentials(
+				accessKey,
+				secKey,
+				"",
+			),
+		})
+
 	if err != nil {
 		log.Fatal(err)
 	}
-	fileBytes := bytes.NewReader(buffer)
-	cacheControl := "max-age=31536000"
-	// make it public
-	userMetaData := map[string]string{"x-amz-acl": "public-read"}
-	n, err := client.PutObject("chodapi", filePath, fileBytes, size, minio.PutObjectOptions{ContentType: fileType, CacheControl: cacheControl, UserMetadata: userMetaData})
+
+	//upload to the s3 bucket
+	uploader := s3manager.NewUploader(sess)
+	up, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket:      aws.String(bucketName),
+		ACL:         aws.String("public-read"),
+		Key:         aws.String(filePath),
+		Body:        bytes.NewReader(buffer),
+		ContentType: aws.String(http.DetectContentType(buffer)),
+	})
+	_ = up
+
 	if err != nil {
-		fmt.Println("the error", err)
+		fmt.Println("error", err)
 		errList["Other_Err"] = "something went wrong"
 		return "", errList
 	}
-	fmt.Println("Successfully uploaded bytes: ", n)
-	return filePath, nil
+
+	fileURL := "https://" + bucketName + "." + "s3-" + region + ".amazonaws.com/" + filePath
+	return fileURL, nil
 }

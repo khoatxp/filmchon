@@ -13,6 +13,7 @@ import (
 	"github.com/khoatxp/filmchon/backend/user_service/utils"
 )
 
+//User table
 type User struct {
 	ID         uint32    `gorm:"primary_key;auto_increment" json:"id"`
 	Username   string    `gorm:"size:255;not null;unique" json:"username"`
@@ -23,6 +24,7 @@ type User struct {
 	UpdatedAt  time.Time `gorm:"default:CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
+//Helper method
 func (u *User) BeforeSave() error {
 	hashedPassword, err := utils.Hash(u.Password)
 	if err != nil {
@@ -32,6 +34,7 @@ func (u *User) BeforeSave() error {
 	return nil
 }
 
+//Helper method
 func (u *User) Prepare() {
 	u.Username = html.EscapeString(strings.TrimSpace(u.Username))
 	u.Email = html.EscapeString(strings.TrimSpace(u.Email))
@@ -46,8 +49,6 @@ func (u *User) AfterFind() (err error) {
 	if u.AvatarPath != "" {
 		u.AvatarPath = os.Getenv("DO_SPACES_URL") + u.AvatarPath
 	}
-	//dont return the user password
-	// u.Password = ""
 	return nil
 }
 
@@ -132,7 +133,7 @@ func (u *User) SaveUser(db *gorm.DB) (*User, error) {
 	return u, nil
 }
 
-// THE ONLY PERSON THAT NEED TO DO THIS IS THE ADMIN, SO I HAVE COMMENTED THE ROUTES, SO SOMEONE ELSE DONT VIEW THIS DETAILS.
+//Admin only
 func (u *User) FindAllUsers(db *gorm.DB) (*[]User, error) {
 	var err error
 	users := []User{}
